@@ -8,7 +8,6 @@ from typing import Text
 def Current_Time():
     time_tuple = time.struct_time(time.gmtime())
     time_string = time.strftime("%Y-%m-%dT%H:%M:%SZ", time_tuple) #ISO 8601-1:2019
-    print(time_string)
     return time_string
     
 
