@@ -1,14 +1,13 @@
-import time
 import tkinter as tk
 from tkinter.constants import BOTTOM, DISABLED, END, LEFT, NORMAL, TOP
 from tkinter import Tk, RIGHT, BOTH, RAISED
 from tkinter.ttk import Frame, Button, Style
+from datetime import datetime, timezone
 from typing import Text
 
 def Current_Time():
-    time_tuple = time.struct_time(time.gmtime())
-    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time_tuple)
-    
+    date_time = (datetime.now(tz=timezone.utc))
+    return date_time.isoformat()    
 
 def Copy_Text(text):
     if(str(text)):
