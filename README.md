@@ -1,4 +1,4 @@
-# DFIR-logbook
+# DFIRlogbook
 Logbook for Digital Forensics and Incident Response
 
 ## Overview
