@@ -1,6 +1,8 @@
 # DFIRlogbook
 Logbook for Digital Forensics and Incident Response
 
+![GUI_Preview](preview_DFIRlogbook.gif)
+
 ## Overview
 This project will help to better standardize the chronological record keeping associated with a period in a simple and easily accessible manner.
 
