@@ -133,8 +133,10 @@ class Ui_MainWindow(object):
         if str(text):
             if utcState == 1:
                 text = f"{self.current_time()} | {text} \n"
-            elif int(self.utcoffsethours.text()) >= 0:
+            elif delta_hours >= 0:
                 text = f"{self.current_time()}+{delta_hours:02}:{delta_minutes:02} | {text} \n"
+            else:
+                text = f"{self.current_time()}{delta_hours:03}:{delta_minutes:02} | {text} \n"
             self.textBrowser.insertPlainText(text)
             self.lineEdit.clear()
 
