@@ -1,5 +1,5 @@
-#   DFIRlogbook version 0.3 (codename squeak)
-#   2021-12-30
+#   DFIRlogbook version 0.31 (codename squeak)
+#   2022-01-12
 #   Author: Matthew Turner ( @MattETurner )
 #
 #   ____
@@ -101,7 +101,7 @@ class Ui_MainWindow(object):
         self.lineEdit.returnPressed.connect(self.lineEditReturn)
         self.actionCopy.triggered.connect(self.clipboardCopy)
         self.actionClear.triggered.connect(self.txtClear)
-        self.actionSave.triggered.connect(self.copy_txt)
+        self.actionSave.triggered.connect(self.file_save)
         self.isUTC.stateChanged.connect(self.isUTC_state_changed)
 
     def isUTC_state_changed(self, int):
@@ -119,11 +119,12 @@ class Ui_MainWindow(object):
     def current_time(self):
         if utcState is 1:
             local_datetime = datetime.now()
+            local_datetime = local_datetime.replace(microsecond=0)
             date_time = local_datetime.astimezone(timezone.utc)
         else:
             delta_hours = int(self.utcoffsethours.text())
             delta_minutes = int(self.utcoffsetminutes.text())
-            date_time = datetime.utcnow() + timedelta(hours=delta_hours, minutes=delta_minutes)
+            date_time = datetime.utcnow().replace(microsecond=0) + timedelta(hours=delta_hours, minutes=delta_minutes)
         return date_time.isoformat()
 
     def copy_txt(self):
@@ -154,6 +155,18 @@ class Ui_MainWindow(object):
         self.textBrowser.setText("")
         clipboard = QtGui.QClipboard()
         clipboard.clear()
+
+    def file_save(self):
+        name = QtWidgets.QFileDialog.getSaveFileName(None, "Save Log as... (.txt)", None,"Text files (*.txt)")
+        with open(name[0], "w") as file:
+            clipboard = QtGui.QClipboard()
+            cursor = self.textBrowser.textCursor()
+            cursor.clearSelection()
+            self.textBrowser.selectAll()
+            self.textBrowser.copy()
+            self.textBrowser.setTextCursor(cursor)
+            text = clipboard.text()
+            file.write(text)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
