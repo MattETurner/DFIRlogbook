@@ -1,5 +1,5 @@
-#   DFIRlogbook version 0.31 (codename squeak)
-#   2022-01-12
+#   DFIRlogbook version 0.32 (codename squeak)
+#   2022-01-19
 #   Author: Matthew Turner ( @MattETurner )
 #
 #   ____
@@ -10,6 +10,7 @@
 
 from PySide6 import QtCore, QtGui, QtWidgets
 from datetime import datetime, timezone, timedelta
+from PySide6.QtWidgets import QMessageBox
 
 # icons path
 QtCore.QDir.addSearchPath('icons', 'icons/')
@@ -98,9 +99,9 @@ class Ui_MainWindow(object):
         self.retranslateUi(DFIRlogbook)
         QtCore.QMetaObject.connectSlotsByName(DFIRlogbook)
         self.btnSubmit.clicked.connect(self.copy_txt)
-        self.lineEdit.returnPressed.connect(self.lineEditReturn)
-        self.actionCopy.triggered.connect(self.clipboardCopy)
-        self.actionClear.triggered.connect(self.txtClear)
+        self.lineEdit.returnPressed.connect(self.line_edit_return)
+        self.actionCopy.triggered.connect(self.clipboard_copy)
+        self.actionClear.triggered.connect(self.txt_clear)
         self.actionSave.triggered.connect(self.file_save)
         self.isUTC.stateChanged.connect(self.isUTC_state_changed)
 
@@ -117,7 +118,7 @@ class Ui_MainWindow(object):
         utcState = arg1
 
     def current_time(self):
-        if utcState is 1:
+        if utcState == 1:
             local_datetime = datetime.now()
             local_datetime = local_datetime.replace(microsecond=0)
             date_time = local_datetime.astimezone(timezone.utc)
@@ -141,20 +142,33 @@ class Ui_MainWindow(object):
             self.textBrowser.insertPlainText(text)
             self.lineEdit.clear()
 
-    def lineEditReturn(self):
+    def line_edit_return(self):
         self.copy_txt()
 
-    def clipboardCopy(self):
+    def clipboard_copy(self):
         cursor = self.textBrowser.textCursor()
         cursor.clearSelection()
         self.textBrowser.selectAll()
         self.textBrowser.copy()
         self.textBrowser.setTextCursor(cursor)
 
-    def txtClear(self):
-        self.textBrowser.setText("")
-        clipboard = QtGui.QClipboard()
-        clipboard.clear()
+    def txt_clear(self):
+        msg = QMessageBox()
+        msg.setWindowTitle("Clear Log?")
+        msg.setText("Pressing 'OK' will clear the clipboard and the log")
+        msg.setIcon(QMessageBox.Warning)
+        msg.setStandardButtons(QMessageBox.Cancel | QMessageBox.Ok)
+        msg.setDefaultButton(QMessageBox.Cancel)
+        msg.buttonClicked.connect(self.clear_action)
+        msg.exec()
+
+    def clear_action(self, i):
+        if i.text() == "Cancel":
+            return
+        else:
+            self.textBrowser.setText("")
+            clipboard = QtGui.QClipboard()
+            clipboard.clear()
 
     def file_save(self):
         name = QtWidgets.QFileDialog.getSaveFileName(None, "Save Log as... (.txt)", None,"Text files (*.txt)")
