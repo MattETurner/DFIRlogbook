@@ -11,9 +11,8 @@
 from PySide6 import QtCore, QtGui, QtWidgets
 from datetime import datetime, timezone, timedelta
 from PySide6.QtWidgets import QMessageBox
-
-# icons path
-QtCore.QDir.addSearchPath('icons', 'icons/')
+# icons resources
+import res_icons
 
 # global utc state
 utcState = 1
@@ -79,20 +78,24 @@ class Ui_MainWindow(object):
         DFIRlogbook.addToolBar(QtCore.Qt.ToolBarArea.LeftToolBarArea, self.toolBar)
         #actionCopy
         self.actionCopy = QtGui.QAction(DFIRlogbook)
-        icon = QtGui.QIcon('icons:copy.png')
+        #icon = QtGui.QIcon('icons:copy.png')
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(":/main/icons/copy.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.Off)
         self.actionCopy.setIcon(icon)
         self.actionCopy.setObjectName("actionCopy")
         self.toolBar.addAction(self.actionCopy)
         # actionClear
         self.actionClear = QtGui.QAction(DFIRlogbook)
-        icon = QtGui.QIcon('icons:clear.png')
-        self.actionClear.setIcon(icon)
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap(":/main/icons/clear.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.Off)
+        self.actionClear.setIcon(icon1)
         self.actionClear.setObjectName("actionClear")
         self.toolBar.addAction(self.actionClear)
         # actionSave
         self.actionSave = QtGui.QAction(DFIRlogbook)
-        icon = QtGui.QIcon('icons:save.png')
-        self.actionSave.setIcon(icon)
+        icon2 = QtGui.QIcon()
+        icon2.addPixmap(QtGui.QPixmap(":/main/icons/save.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.Off)
+        self.actionSave.setIcon(icon2)
         self.actionSave.setObjectName("actionSave")
         self.toolBar.addAction(self.actionSave)
 
