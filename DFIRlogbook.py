@@ -1,21 +1,101 @@
-#   DFIRlogbook version 0.32 (codename squeak)
-#   2022-01-19
+#   DFIRlogbook version 0.4.2.1 (codename baldeagle)
+#   2024-07-05
 #   Author: Matthew Turner ( @MattETurner )
 #
 #   ____
 #  /   /***
-# /___/*****
-#  /    *****
-# /      ******
+# /___/********
+#  /       *********
+# /           ***********
 
-from PySide6 import QtCore, QtGui, QtWidgets
+import sys
+import os
 from datetime import datetime, timezone, timedelta
-from PySide6.QtWidgets import QMessageBox
-# icons resources
-import res_icons
+from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6.QtWidgets import (QMessageBox, QRubberBand, QApplication, QWidget)
+from PySide6.QtWidgets import QWidget
+from PySide6.QtCore import Signal
+from PySide6.QtCore import QRect, QPoint, Qt, QSize
+from PySide6.QtGui import QPixmap, QPainter
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
+from reportlab.lib.styles import getSampleStyleSheet
+
+# icons resources | commented out for now while revising images for taskbar
+# import res_icons
 
 # global utc state
 utcState = 1
+
+class ScreenshotCropWindow(QWidget):
+    cropped = Signal(QPixmap)
+
+    def __init__(self, screenshot):
+        super().__init__()
+        self.screenshot = screenshot
+        self.rubberBand = QRubberBand(QRubberBand.Rectangle, self)
+        self.origin = QPoint()
+        self.setWindowFlags(Qt.FramelessWindowHint)
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.screen = QApplication.primaryScreen()
+        self.setGeometry(self.screen.geometry())
+        self.showFullScreen()
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.drawPixmap(self.rect(), self.screenshot)
+
+    def mousePressEvent(self, event):
+        self.origin = self.mapToGlobal(event.position().toPoint())
+        self.rubberBand.setGeometry(QRect(self.origin, QSize()))
+        self.rubberBand.show()
+
+    def mouseMoveEvent(self, event):
+        self.rubberBand.setGeometry(QRect(self.origin, self.mapToGlobal(event.position().toPoint())).normalized())
+
+    def mouseReleaseEvent(self, event):
+        self.rubberBand.hide()
+        rect = QRect(self.origin, self.mapToGlobal(event.position().toPoint())).normalized()
+        
+        devicePixelRatio = self.screen.devicePixelRatio()
+        
+        if devicePixelRatio == 1:
+            deviceRect = rect
+        else:
+            deviceRect = QRect(rect.x() * devicePixelRatio,
+                               rect.y() * devicePixelRatio,
+                               rect.width() * devicePixelRatio,
+                               rect.height() * devicePixelRatio)
+        
+        cropped = self.screenshot.copy(deviceRect)
+        self.cropped.emit(cropped)
+        self.close()
+        
+class Ui_MainWindow(object):
+    def capture_screen(self):
+        screen = QApplication.primaryScreen()
+        self.full_screenshot = screen.grabWindow(0)
+        self.crop_window = ScreenshotCropWindow(self.full_screenshot)
+        self.crop_window.cropped.connect(self._process_screenshot)
+
+    def _process_screenshot(self, cropped_screenshot):
+        if cropped_screenshot and not cropped_screenshot.isNull():
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"screenshot_{timestamp}.png"
+            
+            if not os.path.exists("screenshots"):
+                os.makedirs("screenshots")
+            
+            cropped_screenshot.save(os.path.join("screenshots", filename))
+            
+            # Add screenshot reference to log
+            log_entry = f"{self.current_time()} | Screenshot captured: {filename}\n"
+            self.textBrowser.insertPlainText(log_entry)
+            
+            # Auto-scroll to the bottom
+            self.textBrowser.verticalScrollBar().setValue(
+                self.textBrowser.verticalScrollBar().maximum()
+            )
 
 class Ui_MainWindow(object):
     def setupUi(self, DFIRlogbook):
@@ -23,6 +103,7 @@ class Ui_MainWindow(object):
         DFIRlogbook.resize(694, 600)
         DFIRlogbook.setMinimumSize(QtCore.QSize(694, 600))
         DFIRlogbook.setDockOptions(QtWidgets.QMainWindow.AllowTabbedDocks | QtWidgets.QMainWindow.AnimatedDocks)
+        self.main_window = DFIRlogbook
         self.centralwidget = QtWidgets.QWidget(DFIRlogbook)
         self.centralwidget.setObjectName("centralwidget")
         self.textBrowser = QtWidgets.QTextBrowser(self.centralwidget)
@@ -76,14 +157,15 @@ class Ui_MainWindow(object):
         self.toolBar.setMinimumSize(QtCore.QSize(30, 30))
         self.toolBar.setObjectName("toolBar")
         DFIRlogbook.addToolBar(QtCore.Qt.ToolBarArea.LeftToolBarArea, self.toolBar)
-        #actionCopy
+        
+        # actionCopy
         self.actionCopy = QtGui.QAction(DFIRlogbook)
-        #icon = QtGui.QIcon('icons:copy.png')
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(":/main/icons/copy.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.Off)
         self.actionCopy.setIcon(icon)
         self.actionCopy.setObjectName("actionCopy")
         self.toolBar.addAction(self.actionCopy)
+        
         # actionClear
         self.actionClear = QtGui.QAction(DFIRlogbook)
         icon1 = QtGui.QIcon()
@@ -91,6 +173,7 @@ class Ui_MainWindow(object):
         self.actionClear.setIcon(icon1)
         self.actionClear.setObjectName("actionClear")
         self.toolBar.addAction(self.actionClear)
+        
         # actionSave
         self.actionSave = QtGui.QAction(DFIRlogbook)
         icon2 = QtGui.QIcon()
@@ -98,6 +181,14 @@ class Ui_MainWindow(object):
         self.actionSave.setIcon(icon2)
         self.actionSave.setObjectName("actionSave")
         self.toolBar.addAction(self.actionSave)
+
+        # Add screen capture action
+        self.actionScreenCapture = QtGui.QAction(DFIRlogbook)
+        icon3 = QtGui.QIcon()
+        icon3.addPixmap(QtGui.QPixmap(":/main/icons/camera.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.Off)
+        self.actionScreenCapture.setIcon(icon3)
+        self.actionScreenCapture.setObjectName("actionScreenCapture")
+        self.toolBar.addAction(self.actionScreenCapture)
 
         self.retranslateUi(DFIRlogbook)
         QtCore.QMetaObject.connectSlotsByName(DFIRlogbook)
@@ -107,6 +198,7 @@ class Ui_MainWindow(object):
         self.actionClear.triggered.connect(self.txt_clear)
         self.actionSave.triggered.connect(self.file_save)
         self.isUTC.stateChanged.connect(self.isUTC_state_changed)
+        self.actionScreenCapture.triggered.connect(self.capture_screen)
 
     def isUTC_state_changed(self, int):
         if self.isUTC.isChecked():
@@ -144,6 +236,11 @@ class Ui_MainWindow(object):
                 text = f"{self.current_time()}{delta_hours:03}:{delta_minutes:02} | {text} \n"
             self.textBrowser.insertPlainText(text)
             self.lineEdit.clear()
+            
+            # Auto-scroll to the bottom
+            self.textBrowser.verticalScrollBar().setValue(
+                self.textBrowser.verticalScrollBar().maximum()
+            )
 
     def line_edit_return(self):
         self.copy_txt()
@@ -158,7 +255,7 @@ class Ui_MainWindow(object):
     def txt_clear(self):
         msg = QMessageBox()
         msg.setWindowTitle("Clear Log?")
-        msg.setText("Pressing 'OK' will clear the clipboard and the log")
+        msg.setText("Pressing 'OK' will clear the log")
         msg.setIcon(QMessageBox.Warning)
         msg.setStandardButtons(QMessageBox.Cancel | QMessageBox.Ok)
         msg.setDefaultButton(QMessageBox.Cancel)
@@ -170,39 +267,94 @@ class Ui_MainWindow(object):
             return
         else:
             self.textBrowser.setText("")
-            clipboard = QtGui.QClipboard()
-            clipboard.clear()
+
+    def capture_screen(self):
+        screen = QtWidgets.QApplication.primaryScreen()
+        self.full_screenshot = screen.grabWindow(0)
+        self.crop_window = ScreenshotCropWindow(self.full_screenshot)
+        self.crop_window.cropped.connect(self._process_screenshot)
+        self.crop_window.showFullScreen()
+
+    def _process_screenshot(self, cropped_screenshot):
+        if cropped_screenshot and not cropped_screenshot.isNull():
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"screenshot_{timestamp}.png"
+            
+            if not os.path.exists("screenshots"):
+                os.makedirs("screenshots")
+            
+            cropped_screenshot.save(os.path.join("screenshots", filename))
+            
+            # Add screenshot reference to log
+            log_entry = f"{self.current_time()} | Screenshot captured: {filename}\n"
+            self.textBrowser.insertPlainText(log_entry)
+            
+            # Auto-scroll to the bottom
+            self.textBrowser.verticalScrollBar().setValue(
+                self.textBrowser.verticalScrollBar().maximum()
+            )
 
     def file_save(self):
-        name = QtWidgets.QFileDialog.getSaveFileName(None, "Save Log as... (.txt)", None,"Text files (*.txt)")
-        with open(name[0], "w") as file:
-            clipboard = QtGui.QClipboard()
-            cursor = self.textBrowser.textCursor()
-            cursor.clearSelection()
-            self.textBrowser.selectAll()
-            self.textBrowser.copy()
-            self.textBrowser.setTextCursor(cursor)
-            text = clipboard.text()
-            file.write(text)
+        name = QtWidgets.QFileDialog.getSaveFileName(None, "Save Log as... (.pdf)", None, "PDF files (*.pdf)")
+        if name[0]:
+            doc = SimpleDocTemplate(name[0], pagesize=letter)
+            styles = getSampleStyleSheet()
+            story = []
+
+            # Get log entries
+            log_text = self.textBrowser.toPlainText()
+            entries = log_text.split('\n')
+
+            for entry in entries:
+                if entry.strip():
+                    if "Screenshot captured:" in entry:
+                        # Add text
+                        story.append(Paragraph(entry, styles['Normal']))
+                        story.append(Spacer(1, 12))
+                        
+                        # Add image
+                        screenshot_name = entry.split(": ")[-1].strip()
+                        img_path = os.path.join("screenshots", screenshot_name)
+                        if os.path.exists(img_path):
+                            img = Image(img_path)
+                            # Set a maximum width
+                            max_width = 6 * 72  # 6 inches * 72 points per inch
+                            # Calculate the aspect ratio
+                            aspect = img.imageWidth / img.imageHeight
+                            # Set the width to either the max_width or the image's original width, whichever is smaller
+                            img_width = min(max_width, img.imageWidth)
+                            # Calculate the height based on the aspect ratio
+                            img_height = img_width / aspect
+                            img.drawWidth = img_width
+                            img.drawHeight = img_height
+                            story.append(img)
+                            story.append(Spacer(1, 12))
+                    else:
+                        story.append(Paragraph(entry, styles['Normal']))
+                        story.append(Spacer(1, 12))
+
+            doc.build(story)
 
     def retranslateUi(self, MainWindow):
-        _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("DFIRlogbook", "DFIRlogbook"))
-        self.lineEdit.setStatusTip(_translate("DFIRlogbook", "Input Entry Field"))
-        self.actionCopy.setStatusTip(_translate("DFIRlogbook", "copy to clipboard"))
-        self.actionClear.setStatusTip(_translate("DFIRlogbook", "Clear Output Field"))
-        self.label.setText(_translate("DFIRlogbook", "ENTRY:"))
-        self.btnSubmit.setText(_translate("DFIRlogbook", "Submit"))
-        self.toolBar.setWindowTitle(_translate("DFIRlogbook", "toolBar"))
-        self.actionCopy.setText(_translate("DFIRlogbook", "Copy"))
-        self.actionClear.setText(_translate("DFIRlogbook", "Clear"))
-        self.actionSave.setText(_translate("DFIRlogbook", "Save"))
-        self.isUTC.setText(_translate("DFIRlogbook", "Timezone: UTC"))
-        self.utcoffsethours.setText(_translate("DFIRlogbook", "00"))
-        self.utcoffsetminutes.setText(_translate("DFIRlogbook", "00"))
-        self.label_2.setText(_translate("DFIRlogbook", "UTC offset"))
-        self.label_3.setText(_translate("DFIRlogbook", "hours:"))
-        self.label_4.setText(_translate("DFIRlogbook", "minutes:"))
+            _translate = QtCore.QCoreApplication.translate
+            MainWindow.setWindowTitle(_translate("DFIRlogbook", "DFIRlogbook"))
+            self.lineEdit.setStatusTip(_translate("DFIRlogbook", "Input Entry Field"))
+            self.actionCopy.setStatusTip(_translate("DFIRlogbook", "Copy to Clipboard"))
+            self.actionClear.setStatusTip(_translate("DFIRlogbook", "Clear Output Field"))
+            self.label.setText(_translate("DFIRlogbook", "ENTRY:"))
+            self.btnSubmit.setText(_translate("DFIRlogbook", "Submit"))
+            self.toolBar.setWindowTitle(_translate("DFIRlogbook", "toolBar"))
+            self.actionCopy.setText(_translate("DFIRlogbook", "Copy"))
+            self.actionClear.setText(_translate("DFIRlogbook", "Clear"))
+            self.actionSave.setText(_translate("DFIRlogbook", "Save"))
+            self.actionScreenCapture.setText(_translate("DFIRlogbook", "Screenshot"))
+            self.actionScreenCapture.setStatusTip(_translate("DFIRlogbook", "Capture a region of the screen"))
+            self.isUTC.setText(_translate("DFIRlogbook", "Timezone: UTC"))
+            self.utcoffsethours.setText(_translate("DFIRlogbook", "00"))
+            self.utcoffsetminutes.setText(_translate("DFIRlogbook", "00"))
+            self.label_2.setText(_translate("DFIRlogbook", "UTC offset"))
+            self.label_3.setText(_translate("DFIRlogbook", "hours:"))
+            self.label_4.setText(_translate("DFIRlogbook", "minutes:"))
 
 if __name__ == "__main__":
     import sys
