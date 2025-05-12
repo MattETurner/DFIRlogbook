@@ -1,1 +1,2 @@
-PySide6==6.2.2.1
+PySide6>=6.9.0
+reportlab>=3.6.12
