@@ -1,6 +1,7 @@
 #   DFIRlogbook
 # Version constant for easy updates
 VERSION = "0.6.0.6"
+DEFAULT_REPORT_IMAGE_SCALE_PERCENT = 70
 #   Date: 2025-05-12
 #   Author: Matthew Turner ( @MattETurner )
 #   License: MIT
@@ -1665,7 +1666,7 @@ class TemplateDialog(QDialog):
         image_size_layout.addWidget(QLabel("Screenshot width in PDF:"))
         self.image_size_combo = QComboBox()
         self.image_size_combo.addItems(["100%", "85%", "70%", "55%", "40%"])
-        self.image_size_combo.setCurrentText("70%")
+        self.image_size_combo.setCurrentText(f"{DEFAULT_REPORT_IMAGE_SCALE_PERCENT}%")
         self.image_size_combo.setToolTip("Controls maximum screenshot width in the generated PDF while preserving aspect ratio")
         image_size_layout.addWidget(self.image_size_combo)
         main_layout.addLayout(image_size_layout)
@@ -1778,7 +1779,7 @@ class TemplateDialog(QDialog):
         try:
             return int(self.image_size_combo.currentText().replace('%', '').strip())
         except (TypeError, ValueError):
-            return 70
+            return DEFAULT_REPORT_IMAGE_SCALE_PERCENT
 
 
 if __name__ == "__main__":
