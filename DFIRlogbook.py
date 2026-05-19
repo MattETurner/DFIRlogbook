@@ -1284,6 +1284,8 @@ class Ui_MainWindow(object):
                     end_seq = entry.find(']')
                     sequence = entry[2:end_seq]
                     entry = entry[end_seq+1:].strip()
+                    if entry.startswith('|'):
+                        entry = entry[1:].strip()
                 
                 # Remove tags from the entry
                 if '[' in entry and ']' in entry and ' | ' in entry:
