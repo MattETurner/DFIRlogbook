@@ -36,3 +36,23 @@ Option 2 (Terminal):
    (use `DFIRlogbook-macos-x64` instead on Intel Macs)
 
 Replace `~/Downloads` with your actual download location if different.
+
+## Run from source (fresh setup)
+
+### Linux / macOS
+```bash
+chmod +x scripts/install.sh
+./scripts/install.sh
+source .venv/bin/activate
+python DFIRlogbook.py
+```
+
+### Windows (PowerShell)
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\scripts\install.ps1
+.\.venv\Scripts\Activate.ps1
+python .\DFIRlogbook.py
+```
+
+These scripts create a local `.venv`, upgrade `pip`, and install required dependencies from `requirements.txt`.
