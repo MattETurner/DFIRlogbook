@@ -25,7 +25,10 @@ Option 1 (recommended):
 3. Click **Open** again in the security prompt.
 
 Option 2 (Terminal):
-1. Remove quarantine from the downloaded binary:
-   `xattr -d com.apple.quarantine ~/Downloads/DFIRlogbook-macos-arm64`
-2. Ensure it is executable:
-   `chmod +x ~/Downloads/DFIRlogbook-macos-arm64`
+1. Use the binary name that matches your Mac architecture:
+   - Apple Silicon: `DFIRlogbook-macos-arm64`
+   - Intel Mac: `DFIRlogbook-macos-x64`
+2. Remove quarantine from the downloaded binary:
+   `xattr -d com.apple.quarantine ~/Downloads/DFIRlogbook-macos-<arch>`
+3. Ensure it is executable:
+   `chmod +x ~/Downloads/DFIRlogbook-macos-<arch>`
