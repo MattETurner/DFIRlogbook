@@ -10,4 +10,23 @@ Rewrote GUI to PySide6 instead of tkinter. added a toolbar. added ability to spe
 
 **tkinter_basic.py has been moved to the archived folder 'DFIRlogbook_basic'. 
 
+## Releases
+GitHub Releases now auto-build binaries for:
+- Windows
+- Linux
+- macOS
+
+### Running the unsigned macOS binary
+Because the macOS binary is unsigned, Gatekeeper may block it the first time you open it.
+
+Option 1 (recommended):
+1. Control-click (or right-click) the app/binary.
+2. Select **Open**.
+3. Click **Open** again in the security prompt.
+
+Option 2 (Terminal):
+1. Remove quarantine from the downloaded binary:
+   `xattr -d com.apple.quarantine /path/to/DFIRlogbook`
+2. Ensure it is executable:
+   `chmod +x /path/to/DFIRlogbook`
 
