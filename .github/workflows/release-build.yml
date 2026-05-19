@@ -52,7 +52,12 @@ jobs:
       - name: Prepare release asset
         shell: bash
         run: |
-          ARCH="$(echo "${RUNNER_ARCH}" | tr '[:upper:]' '[:lower:]')"
+          case "${RUNNER_ARCH}" in
+            X64) ARCH="x64" ;;
+            ARM64) ARCH="arm64" ;;
+            ARM) ARCH="arm" ;;
+            *) ARCH="$(echo "${RUNNER_ARCH}" | tr '[:upper:]' '[:lower:]')" ;;
+          esac
           ASSET_NAME="${{ matrix.asset_prefix }}-${ARCH}${{ matrix.asset_ext }}"
           mkdir -p release-assets
           cp "dist/${{ matrix.output_name }}" "release-assets/${ASSET_NAME}"
