@@ -21,16 +21,19 @@ jobs:
             output_name: DFIRlogbook.exe
             asset_prefix: DFIRlogbook-windows
             asset_ext: .exe
+            pyinstaller_args: --windowed
           - os: ubuntu-latest
             label: linux
             output_name: DFIRlogbook
             asset_prefix: DFIRlogbook-linux
             asset_ext: ""
+            pyinstaller_args: ""
           - os: macos-latest
             label: macos
             output_name: DFIRlogbook
             asset_prefix: DFIRlogbook-macos
             asset_ext: ""
+            pyinstaller_args: ""
 
     steps:
       - name: Checkout
@@ -47,7 +50,7 @@ jobs:
           pip install -r requirements.txt pyinstaller
 
       - name: Build binary
-        run: pyinstaller --noconfirm --clean --onefile --windowed --name DFIRlogbook DFIRlogbook.py
+        run: pyinstaller --noconfirm --clean --onefile ${{ matrix.pyinstaller_args }} --name DFIRlogbook DFIRlogbook.py
 
       - name: Prepare release asset
         shell: bash
