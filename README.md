@@ -28,7 +28,9 @@ Option 2 (Terminal):
 1. Use the binary name that matches your Mac architecture:
    - Apple Silicon: `DFIRlogbook-macos-arm64`
    - Intel Mac: `DFIRlogbook-macos-x64`
-2. Remove quarantine from the downloaded binary:
-   `xattr -d com.apple.quarantine ~/Downloads/DFIRlogbook-macos-<arch>`
+2. Remove quarantine from the downloaded binary (example shown for Apple Silicon):
+   `xattr -d com.apple.quarantine ~/Downloads/DFIRlogbook-macos-arm64`
+   (use `DFIRlogbook-macos-x64` instead on Intel Macs)
 3. Ensure it is executable:
-   `chmod +x ~/Downloads/DFIRlogbook-macos-<arch>`
+   `chmod +x ~/Downloads/DFIRlogbook-macos-arm64`
+   (use `DFIRlogbook-macos-x64` instead on Intel Macs)
