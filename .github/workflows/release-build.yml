@@ -70,7 +70,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: release-assets
-          pattern: "*-binary"
+          pattern: "*-binary*"
           merge-multiple: true
 
       - name: Attach assets to release
