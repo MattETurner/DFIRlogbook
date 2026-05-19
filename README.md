@@ -34,3 +34,5 @@ Option 2 (Terminal):
 3. Ensure it is executable:
    `chmod +x ~/Downloads/DFIRlogbook-macos-arm64`
    (use `DFIRlogbook-macos-x64` instead on Intel Macs)
+
+Replace `~/Downloads` with your actual download location if different.
