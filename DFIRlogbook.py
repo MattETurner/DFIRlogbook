@@ -1,6 +1,6 @@
 #   DFIRlogbook
 # Version constant for easy updates
-VERSION = "0.6.0.4"
+VERSION = "0.6.0.6"
 #   Date: 2025-05-12
 #   Author: Matthew Turner ( @MattETurner )
 #   License: MIT
@@ -1153,6 +1153,7 @@ class Ui_MainWindow(object):
             if not modules:
                 QMessageBox.warning(self.central_widget, "No sections", "Add at least one section to the template.")
                 return
+            image_scale_percent = tmpl.get_image_scale_percent()
 
             save_path, _ = QtWidgets.QFileDialog.getSaveFileName(None, "Save Report as... (.pdf)", None, "PDF files (*.pdf)")
             if not save_path:
@@ -1309,17 +1310,13 @@ class Ui_MainWindow(object):
 
                 # Handle screenshots specially
                 if "Screenshot captured:" in entry:
-                    # Add sequence number to screenshot entry if present and enabled
-                    if sequence and show_numbers:
-                        story.append(Paragraph(f"[#{sequence}] | {formatted_entry}", styles['Normal']))
-                    else:
-                        story.append(Paragraph(formatted_entry, styles['Normal']))
+                    story.append(Paragraph(formatted_entry, styles['Normal']))
                     story.append(Spacer(1, 12))
                     screenshot_name = entry.split(': ')[-1].strip()
                     img_path = os.path.join(screenshots_folder, screenshot_name)
                     if os.path.exists(img_path):
                         img = Image(img_path)
-                        max_width = 6 * 72  # 6 inches
+                        max_width = (6 * 72) * (image_scale_percent / 100.0)
                         aspect = img.imageWidth / img.imageHeight if img.imageHeight else 1
                         img_width = min(max_width, img.imageWidth)
                         img_height = img_width / aspect
@@ -1328,11 +1325,7 @@ class Ui_MainWindow(object):
                         story.append(img)
                         story.append(Spacer(1, 12))
                 else:
-                    # Add sequence number to regular entry if present and enabled
-                    if sequence and show_numbers:
-                        story.append(Paragraph(f"[#{sequence}] | {formatted_entry}", styles['Normal']))
-                    else:
-                        story.append(Paragraph(formatted_entry, styles['Normal']))
+                    story.append(Paragraph(formatted_entry, styles['Normal']))
                     story.append(Spacer(1, 12))
 
             # Build story from modules
@@ -1667,6 +1660,16 @@ class TemplateDialog(QDialog):
         self.show_entry_numbers.setToolTip("When checked, entry numbers will be included in the report output")
         main_layout.addWidget(self.show_entry_numbers)
 
+        # Screenshot size control
+        image_size_layout = QHBoxLayout()
+        image_size_layout.addWidget(QLabel("Screenshot width in PDF:"))
+        self.image_size_combo = QComboBox()
+        self.image_size_combo.addItems(["100%", "85%", "70%", "55%", "40%"])
+        self.image_size_combo.setCurrentText("70%")
+        self.image_size_combo.setToolTip("Controls maximum screenshot width in the generated PDF while preserving aspect ratio")
+        image_size_layout.addWidget(self.image_size_combo)
+        main_layout.addLayout(image_size_layout)
+
         # Draggable / reorderable list
         self.module_list = QListWidget()
         self.module_list.setDragDropMode(QAbstractItemView.InternalMove)
@@ -1770,6 +1773,12 @@ class TemplateDialog(QDialog):
             module_data['show_entry_numbers'] = self.show_entry_numbers.isChecked()
             modules.append(module_data)
         return modules
+
+    def get_image_scale_percent(self):
+        try:
+            return int(self.image_size_combo.currentText().replace('%', '').strip())
+        except (TypeError, ValueError):
+            return 70
 
 
 if __name__ == "__main__":
