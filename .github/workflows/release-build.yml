@@ -19,15 +19,18 @@ jobs:
           - os: windows-latest
             label: windows
             output_name: DFIRlogbook.exe
-            asset_name: DFIRlogbook-windows-x64.exe
+            asset_prefix: DFIRlogbook-windows
+            asset_ext: .exe
           - os: ubuntu-latest
             label: linux
             output_name: DFIRlogbook
-            asset_name: DFIRlogbook-linux-x64
+            asset_prefix: DFIRlogbook-linux
+            asset_ext: ""
           - os: macos-latest
             label: macos
             output_name: DFIRlogbook
-            asset_name: DFIRlogbook-macos
+            asset_prefix: DFIRlogbook-macos
+            asset_ext: ""
 
     steps:
       - name: Checkout
@@ -49,14 +52,16 @@ jobs:
       - name: Prepare release asset
         shell: bash
         run: |
+          ARCH="$(echo "${RUNNER_ARCH}" | tr '[:upper:]' '[:lower:]')"
+          ASSET_NAME="${{ matrix.asset_prefix }}-${ARCH}${{ matrix.asset_ext }}"
           mkdir -p release-assets
-          cp "dist/${{ matrix.output_name }}" "release-assets/${{ matrix.asset_name }}"
+          cp "dist/${{ matrix.output_name }}" "release-assets/${ASSET_NAME}"
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.label }}-binary
-          path: release-assets/${{ matrix.asset_name }}
+          path: release-assets/*
           if-no-files-found: error
 
   upload-release-assets:

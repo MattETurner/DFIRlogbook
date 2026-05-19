@@ -26,7 +26,6 @@ Option 1 (recommended):
 
 Option 2 (Terminal):
 1. Remove quarantine from the downloaded binary:
-   `xattr -d com.apple.quarantine /path/to/DFIRlogbook`
+   `xattr -d com.apple.quarantine ~/Downloads/DFIRlogbook-macos-arm64`
 2. Ensure it is executable:
-   `chmod +x /path/to/DFIRlogbook`
-
+   `chmod +x ~/Downloads/DFIRlogbook-macos-arm64`
